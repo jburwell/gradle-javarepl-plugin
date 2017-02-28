@@ -1,0 +1,33 @@
+apply plugin: 'groovy'
+apply plugin: 'idea'
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'maven'
+
+// In this section you declare where to find the dependencies of your project
+repositories {
+    // Use 'jcenter' for resolving your dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
+}
+
+// In this section you declare the dependencies for your production and test code
+dependencies {
+
+    compile localGroovy()
+    compile 'com.javarepl:javarepl:428'
+
+    testCompile gradleTestKit()
+    testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
+        exclude module: 'groovy-all'
+    }
+
+}
+
+gradlePlugin {
+    plugins {
+        simplePlugin {
+            id = "net.cockamamy.gradle.javarepl"
+            implementationClass = "net.cockamamy.gradle.javarepl.JavaReplPlugin"
+        }
+    }
+}
