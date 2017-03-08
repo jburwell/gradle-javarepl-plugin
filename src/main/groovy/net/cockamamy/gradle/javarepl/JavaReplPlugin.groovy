@@ -14,12 +14,14 @@
  */
 package net.cockamamy.gradle.javarepl
 
-import javarepl.console.Console
-import javarepl.console.ConsoleConfig
-import javarepl.console.SimpleConsole
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
+
+import java.util.concurrent.TimeUnit
+
+import static java.lang.ProcessBuilder.Redirect.INHERIT
+import static java.util.concurrent.TimeUnit.SECONDS
 
 class JavaReplPlugin implements Plugin<Project> {
 
@@ -28,31 +30,46 @@ class JavaReplPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
 
-        // This plugin requires the Java plugin.  If it has not been applied
-        // then add it ...
-        if (!project.plugins.hasPlugin(JavaPlugin.class)) {
-            // TODO Log a message that the Java plugin is being applied
-            project.apply plugin: "java"
-        }
-
         project.extensions.create("javarepl", JavaReplPluginExtension)
 
-        project.configurations.maybeCreate(JAVAREPL_CONFIGURATION)
-            .extendsFrom(project.configurations.getByName(project.javarepl.baseConfiguration))
+        project.afterEvaluate {
+            // This plugin requires the Java plugin.  If it has not been applied
+            // then add it ...
+            if (!project.plugins.hasPlugin(JavaPlugin.class)) {
+                // TODO Log a message that the Java plugin is being applied
+                project.apply plugin: "java"
+            }
 
-        project.dependencies {
-            javarepl "com.javarepl:javarepl:${project.javarepl.version}"
-        }
+            project.task('javarepl', dependsOn: 'testClasses') {
 
-        project.tasks.create('javarepl', {
-            doLast {
+                final aConfiguration = project.configurations.maybeCreate(JAVAREPL_CONFIGURATION)
+                    .extendsFrom(project.configurations.getByName(project.javarepl.baseConfiguration))
 
-                // TODO Configure history file from plugin parameters
-                Console console = new SimpleConsole(ConsoleConfig.consoleConfig())
-                console.start()
+                project.dependencies {
+                    javarepl "com.javarepl:javarepl:${project.javarepl.version}"
+                }
+
+                final aCommand = [
+                        'java',
+                        '-cp',
+                        aConfiguration.asPath,
+                        'javarepl.Main'
+                ]
+
+                final aProcess = new ProcessBuilder(aCommand)
+                    .redirectInput(INHERIT)
+                    .redirectOutput(INHERIT)
+                    .redirectError(INHERIT)
+                    .start()
+
+                final Integer aTimeout = project.javarepl.timeout
+                aTimeout != null ? aProcess.waitFor(aTimeout, SECONDS) : aProcess.waitFor()
+                aProcess.destroyForcibly()
+
 
             }
-        })
+
+        }
 
     }
 

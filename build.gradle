@@ -1,20 +1,40 @@
-apply plugin: 'groovy'
-apply plugin: 'idea'
-apply plugin: 'java-gradle-plugin'
-apply plugin: 'maven'
+/* Copyright 2017 John S. Burwell III
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+plugins {
+    id "groovy"
+    id "idea"
+    id "java-gradle-plugin"
+    id "maven"
+    id "com.gradle.plugin-publish" version "0.9.7"
+//    id "com.github.johnrengelman.shadow" version "1.2.4"
+}
 
-// In this section you declare where to find the dependencies of your project
+group = "net.cockamamy.gradle"
+version = "0.1.0"
+def pluginId = "${group}.javarepl"
+
+sourceCompatibility = "1.8"
+targetCompatibility = sourceCompatibility
+
 repositories {
-    // Use 'jcenter' for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
     jcenter()
 }
 
-// In this section you declare the dependencies for your production and test code
 dependencies {
 
     compile localGroovy()
-    compile 'com.javarepl:javarepl:428'
 
     testCompile gradleTestKit()
     testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
@@ -25,9 +45,28 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        simplePlugin {
-            id = "net.cockamamy.gradle.javarepl"
+        javaReplPlugin {
+            id = pluginId
             implementationClass = "net.cockamamy.gradle.javarepl.JavaReplPlugin"
         }
     }
 }
+
+pluginBundle {
+    vcsUrl = "https://github.com/jburwell/gradle-javarepl-plugin"
+    website = "https://github.com/jburwell/gradle-javarepl-plugin"
+    description = "Starts a Java REPL configured to use a Gradle project's dependencies"
+    tags = [ "java", "tool", "repl" ]
+
+    plugins {
+        javaReplPlugin {
+            id = pluginId
+            displayName = 'Gradle JavaREPL plugin'
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = "3.4.1"
+}
+
