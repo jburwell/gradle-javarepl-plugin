@@ -14,14 +14,16 @@
  */
 package net.cockamamy.gradle.javarepl
 
+import org.gradle.api.GradleException
+import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 
-import java.util.concurrent.TimeUnit
-
 import static java.lang.ProcessBuilder.Redirect.INHERIT
 import static java.util.concurrent.TimeUnit.SECONDS
+import static org.gradle.api.JavaVersion.VERSION_1_8
+import static org.gradle.api.JavaVersion.VERSION_1_9
 
 class JavaReplPlugin implements Plugin<Project> {
 
@@ -33,6 +35,7 @@ class JavaReplPlugin implements Plugin<Project> {
         project.extensions.create("javarepl", JavaReplPluginExtension)
 
         project.afterEvaluate {
+
             // This plugin requires the Java plugin.  If it has not been applied
             // then add it ...
             if (!project.plugins.hasPlugin(JavaPlugin.class)) {
@@ -41,6 +44,12 @@ class JavaReplPlugin implements Plugin<Project> {
             }
 
             project.task('javarepl', dependsOn: 'testClasses') {
+
+                description = "Runs Java REPL with the classpath defined in the ${project.javarepl.baseConfiguration} configuration"
+
+                if (JavaVersion.current() != VERSION_1_8 && JavaVersion.current() != VERSION_1_9) {
+                    throw new GradleException("The javarepl plugin must be run with Java 8 or above")
+                }
 
                 final aConfiguration = project.configurations.maybeCreate(JAVAREPL_CONFIGURATION)
                     .extendsFrom(project.configurations.getByName(project.javarepl.baseConfiguration))
@@ -69,7 +78,6 @@ class JavaReplPlugin implements Plugin<Project> {
                 final Integer aTimeout = project.javarepl.timeout
                 aTimeout != null ? aProcess.waitFor(aTimeout, SECONDS) : aProcess.waitFor()
                 aProcess.destroyForcibly()
-
 
             }
 

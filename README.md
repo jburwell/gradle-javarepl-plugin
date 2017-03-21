@@ -30,16 +30,16 @@ The plugin adds a ``javarepl`` extension namespace with the following options:
 
 # Running
 
-Normally, Gradle runs using a rich console which adds a status line to depict build status.  It will also attempt to use an existing daemon to speed up builds.  Unfortunately, these two features prevent interactive console applications such as JavaREPL from running properly.  Therefore, Gradle should be run with the ``--console plain`` and ``--no-daemon`` options when running the ``javarepl`` task.  The following is an example command line to properly execute the ``javarepl`` task:
+Normally, Gradle will attempt to use an existing daemon to speed up builds.  Unfortunately, this feature prevents interactive console applications such as JavaREPL from running properly.  Therefore, Gradle should be started with the ``--no-daemon`` commmand line option when running the ``javarepl`` task.  The following is an example command line to properly execute the ``javarepl`` task:
 
 ```
-./gradlew javarepl --console plain --no-daemon
+./gradlew javarepl --no-daemon
 ```
 
 To reduce the overhead to typing this command line regularly, it is suggested that users add the following alias to their shell profile:
 
 ```
-alias grel='./gradlew javarepl --console plain --no-daemon"
+alias grel='./gradlew javarepl --no-daemon"
 ```
 
 With this alias, the ``grepl`` command will start a Java REPL using Gradle.
