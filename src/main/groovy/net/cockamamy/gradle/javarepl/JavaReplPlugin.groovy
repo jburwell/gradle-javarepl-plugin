@@ -60,16 +60,20 @@ class JavaReplPlugin implements Plugin<Project> {
 
                 final aCommand = [
                         'java',
-                        '-cp',
-                        aConfiguration.asPath,
                         'javarepl.Main'
                 ]
 
-                final aProcess = new ProcessBuilder(aCommand)
+                final aProcessBuilder = new ProcessBuilder(aCommand)
                     .redirectInput(INHERIT)
                     .redirectOutput(INHERIT)
                     .redirectError(INHERIT)
-                    .start()
+
+                // Specify the classpath as an environment variable rather than a command line option
+                // to allow for a longer classpath string than default shell command lines support ...
+                final aClasspath = aConfiguration.asPath
+                aProcessBuilder.environment().put("CLASSPATH", aClasspath)
+
+                final aProcess = aProcessBuilder.start()
 
                 final Integer aTimeout = project.javarepl.timeout
                 aTimeout != null ? aProcess.waitFor(aTimeout, SECONDS) : aProcess.waitFor()
