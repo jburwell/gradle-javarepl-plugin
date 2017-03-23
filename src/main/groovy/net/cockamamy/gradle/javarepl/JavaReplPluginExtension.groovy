@@ -14,12 +14,31 @@
  */
 package net.cockamamy.gradle.javarepl
 
+import org.gradle.api.GradleException
+
 class JavaReplPluginExtension {
 
     List<String> configurations = ["testRuntime"]
-    String version = "428"
-    Integer timeout = null
+    String dependsOn = "testClasses"
     Integer heapSize = null
     Integer stackSize = null
+    Integer timeout = null
+    String version = "428"
+
+    void validate() {
+
+        if (!configurations) {
+            throw new GradleException("The JavaREPL plugin requires the specification of one or more configurations")
+        }
+
+        if (!dependsOn) {
+            throw new GradleException("The Java REPL plugin requires the specification of dependent task.")
+        }
+
+        if (!version) {
+            throw new GradleException("The Java REPL plugin requires the specification of a Java REPL version.")
+        }
+
+    }
 
 }
