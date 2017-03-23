@@ -4,7 +4,26 @@
 
 This plugin runs [JavaREPL](http://www.javarepl.com) within the context a Gradle build file.  It configures the classpath used by javarepl to resolve classes to include all [`testRuntime`](https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management) dependencies, as well as, the compile and test artifacts for this project.  Using this plugin, developers can easily explore and execute different aspects of their projects via a REPL.
 
-# Installation 
+The following is a sample of the plugin output:
+
+```
+➜ gradle-javarepl-plugin git:(jsb/release-1.0.0) ✗ ./gradlew --no-daemon --console plain javarepl
+:compileJava NO-SOURCE
+:processResources
+:classes
+:compileTestJava NO-SOURCE
+:processTestResources NO-SOURCE
+:testClasses UP-TO-DATE
+:javarepl
+
+
+Welcome to JavaREPL version 428 (Java HotSpot(TM) 64-Bit Server VM, Java 1.8.0_92)
+Type expression to evaluate, :help for more options or press tab to auto-complete.
+Connected to local instance at http://localhost:63534
+java>
+```
+
+# Installation
 
 **N.B.** This plugin requires JDK 8+.  Java 7 and below are **not** supported.
 
@@ -33,16 +52,16 @@ The plugin adds a ``javarepl`` extension namespace with the following options:
 
 # Running
 
-Normally, Gradle will attempt to use an existing daemon to speed up builds.  Unfortunately, this feature prevents interactive console applications such as JavaREPL from running properly.  Therefore, Gradle should be started with the ``--no-daemon`` commmand line option when running the ``javarepl`` task.  The following is an example command line to properly execute the ``javarepl`` task:
+Normally, Gradle will attempt to use an existing daemon to speed up builds.  Unfortunately, this feature prevents interactive console applications such as JavaREPL from running properly.  Therefore, Gradle should be started with the ``--no-daemon`` commmand line option when running the ``javarepl`` task.  In addition to the daemon issue, Gradle's rich console can interfere with the JavaREPL's operations.  Running the task with the ``--console plain`` option will disable the rich console to avoid these potential issues.  The following is an example command line to properly execute the ``javarepl`` task:
 
 ```
-./gradlew javarepl --no-daemon
+./gradlew javarepl --no-daemon --console plain
 ```
 
 To reduce the overhead to typing this command line regularly, it is suggested that users add the following alias to their shell profile:
 
 ```
-alias grel='./gradlew javarepl --no-daemon'
+alias grel='./gradlew javarepl --no-daemon --console plain'
 ```
 
 With this alias, the ``grepl`` command will start a Java REPL using Gradle.
