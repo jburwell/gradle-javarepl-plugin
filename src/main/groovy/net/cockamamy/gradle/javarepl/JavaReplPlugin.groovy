@@ -55,9 +55,13 @@ class JavaReplPlugin implements Plugin<Project> {
                     throw new GradleException("The javarepl plugin must be run with Java 8 or above")
                 }
 
-                final aCommand = ['java', 'javarepl.Main']
+                final aHeapSize = project.javarepl.heapSize
+                final aHeapArgument = aHeapSize ? "-Xms${aHeapSize}m -Xmx${aHeapSize}m" : ""
 
-                final aProcessBuilder = new ProcessBuilder(aCommand)
+                final aStackSize = project.javarepl.stackSize
+                final aStackArgument= aStackSize ? "-Xss${aStackSize}m" : ""
+
+                final aProcessBuilder = new ProcessBuilder("java", aHeapArgument, aStackArgument, "javarepl.Main")
                     .redirectInput(INHERIT)
                     .redirectOutput(INHERIT)
                     .redirectError(INHERIT)
@@ -72,7 +76,7 @@ class JavaReplPlugin implements Plugin<Project> {
 
                 // Configure the classpath as an environment variable rather than a command line option
                 // to allow for a longer classpath string than default shell command lines support ...
-                project.logger.debug("Starting JavaREPL with classpath: ${aClasspath}")
+                project.logger.debug("Using classpath ${aClasspath} for JavaREPL")
                 aProcessBuilder.environment().put("CLASSPATH", aClasspath)
 
                 final aProcess = aProcessBuilder.start()

@@ -32,7 +32,7 @@ class JavaReplPluginFunctionalTest extends Specification {
         myBuildFile = myTestProjectDir.newFile("build.gradle")
     }
 
-    def "Successfully start Java REPL"() {
+    def "Run Java REPL with default settings"() {
         given:
             myBuildFile << """
                 plugins {
@@ -129,7 +129,7 @@ class JavaReplPluginFunctionalTest extends Specification {
             result.task(":javarepl").outcome == UP_TO_DATE
 
         where:
-            gradleVersion << ["3.3", "3.4"]
+            gradleVersion << TEST_VERSIONS
 
     }
 
@@ -167,5 +167,107 @@ class JavaReplPluginFunctionalTest extends Specification {
 
     }
 
+    def "Run Java REPL with a custom heap size"() {
+        given:
+            myBuildFile << """
+                    plugins {
+                        id 'net.cockamamy.gradle.javarepl'
+                    }
+                    
+                    repositories {
+                        jcenter()
+                    }
+                    
+                    ext {
+                        javarepl {
+                            timeout = 10
+                            heapSize = 512
+                        }
+                    }
+                """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .build()
+
+        then:
+            result.task(":javarepl").outcome == UP_TO_DATE
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
+    def "Run Java REPL with a custom stack size"() {
+        given:
+            myBuildFile << """
+                        plugins {
+                            id 'net.cockamamy.gradle.javarepl'
+                        }
+                        
+                        repositories {
+                            jcenter()
+                        }
+                        
+                        ext {
+                            javarepl {
+                                timeout = 10
+                                stackSize = 256
+                            }
+                        }
+                    """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .build()
+
+        then:
+            result.task(":javarepl").outcome == UP_TO_DATE
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
+    def "Run Java REPL with a custom heap and stack size"() {
+        given:
+            myBuildFile << """
+                            plugins {
+                                id 'net.cockamamy.gradle.javarepl'
+                            }
+                            
+                            repositories {
+                                jcenter()
+                            }
+                            
+                            ext {
+                                javarepl {
+                                    timeout = 10
+                                    heapSize = 512
+                                    stackSize = 256
+                                }
+                            }
+                        """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .build()
+
+        then:
+            result.task(":javarepl").outcome == UP_TO_DATE
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
 
 }
