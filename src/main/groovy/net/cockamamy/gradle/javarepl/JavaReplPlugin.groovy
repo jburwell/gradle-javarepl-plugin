@@ -27,8 +27,6 @@ import static org.gradle.api.JavaVersion.VERSION_1_9
 
 class JavaReplPlugin implements Plugin<Project> {
 
-    static final String JAVAREPL_CONFIGURATION = "javarepl"
-
     @Override
     void apply(Project project) {
 
@@ -39,38 +37,42 @@ class JavaReplPlugin implements Plugin<Project> {
             // This plugin requires the Java plugin.  If it has not been applied
             // then add it ...
             if (!project.plugins.hasPlugin(JavaPlugin.class)) {
-                // TODO Log a message that the Java plugin is being applied
+                project.logger.warn("The Java plugin has been included to support Java REPL")
                 project.apply plugin: "java"
+            }
+
+            final aConfiguration = project.configurations.maybeCreate("javarepl")
+
+            project.dependencies {
+                javarepl "com.javarepl:javarepl:${project.javarepl.version}"
             }
 
             project.task('javarepl', dependsOn: 'testClasses') {
 
-                description = "Runs Java REPL with the classpath defined in the ${project.javarepl.baseConfiguration} configuration"
+                description = "Runs Java REPL with the classpath defined in the ${project.javarepl.configurations} configurations"
 
                 if (JavaVersion.current() != VERSION_1_8 && JavaVersion.current() != VERSION_1_9) {
                     throw new GradleException("The javarepl plugin must be run with Java 8 or above")
                 }
 
-                final aConfiguration = project.configurations.maybeCreate(JAVAREPL_CONFIGURATION)
-                    .extendsFrom(project.configurations.getByName(project.javarepl.baseConfiguration))
-
-                project.dependencies {
-                    javarepl "com.javarepl:javarepl:${project.javarepl.version}"
-                }
-
-                final aCommand = [
-                        'java',
-                        'javarepl.Main'
-                ]
+                final aCommand = ['java', 'javarepl.Main']
 
                 final aProcessBuilder = new ProcessBuilder(aCommand)
                     .redirectInput(INHERIT)
                     .redirectOutput(INHERIT)
                     .redirectError(INHERIT)
 
-                // Specify the classpath as an environment variable rather than a command line option
+                // Collect the dependencies from all configurations to build the classpath string.  Accumulating the
+                // pathes into a Set dedups the list in the event that a dependency is defined multiple times or repeats
+                // due to configuration extension ...
+                final aClasspath = project.javarepl.configurations
+                    .inject(new HashSet<String>(), { paths, name -> paths + project.configurations.getByName(name).asPath })
+                    .plus(aConfiguration.asPath)
+                    .join(File.pathSeparator)
+
+                // Configure the classpath as an environment variable rather than a command line option
                 // to allow for a longer classpath string than default shell command lines support ...
-                final aClasspath = aConfiguration.asPath
+                project.logger.debug("Starting JavaREPL with classpath: ${aClasspath}")
                 aProcessBuilder.environment().put("CLASSPATH", aClasspath)
 
                 final aProcess = aProcessBuilder.start()
