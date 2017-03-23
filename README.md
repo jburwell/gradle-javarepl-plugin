@@ -24,9 +24,9 @@ The plugin adds a ``javarepl`` extension namespace with the following options:
 
 |Extension Property|Description|Default Value|
 |------------------|-----------|-------------|
-|``baseConfiguration``|The Gradle configuration from which the classpath used to run Java REPL is derived|``testRuntime``|
+|``configurations``|The list of Gradle configurations from which the classpath used to run Java REPL is derived|``["testRuntime"]``|
 |``version``|The version of Java REPL to install|428|
-|``timeout``|The length of time to run Java REPL before killing it.  This parameter is primarily for unit testing purposes.|``null``|
+|``timeout``|The length of time to run Java REPL before killing it.  This parameter is primarily use by unit tests. |``null``|
 
 # Running
 
@@ -39,7 +39,26 @@ Normally, Gradle will attempt to use an existing daemon to speed up builds.  Unf
 To reduce the overhead to typing this command line regularly, it is suggested that users add the following alias to their shell profile:
 
 ```
-alias grel='./gradlew javarepl --no-daemon"
+alias grel='./gradlew javarepl --no-daemon'
 ```
 
 With this alias, the ``grepl`` command will start a Java REPL using Gradle.
+
+# Manual Testing
+
+The `test-repl.sh` script is provided to run development builds of the plugin for manual testing purposes.
+
+# Known Issues
+
+Quiting JavaREPL, either by using the ``:quit`` command or `CTRL-C`, causes the following stack trace:
+
+```
+Exception in thread "main" java.lang.RuntimeException: { expected, j encountered.
+	at javarepl.internal.totallylazy.parser.Failure.exception(Failure.java:76)
+	at javarepl.internal.totallylazy.parser.Failure.value(Failure.java:72)
+	at javarepl.internal.totallylazy.json.Json.map(Json.java:20)
+	at javarepl.client.JavaREPLClient.execute(JavaREPLClient.java:72)
+	at javarepl.Main.main(Main.java:66)
+```
+
+This exception is spurious and does not cause any problems.

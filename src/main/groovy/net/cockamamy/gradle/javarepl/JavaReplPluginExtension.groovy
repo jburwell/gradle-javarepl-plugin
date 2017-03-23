@@ -16,7 +16,7 @@ package net.cockamamy.gradle.javarepl
 
 class JavaReplPluginExtension {
 
-    String baseConfiguration = "testRuntime"
+    List<String> configurations = ["testRuntime"]
     String version = "428"
     Integer timeout = null
 

@@ -1,0 +1,26 @@
+buildscript {
+    repositories {
+        flatDir dirs: "build/libs"
+    }
+    dependencies {
+        classpath "net.cockamamy.gradle:gradle-javarepl-plugin:0.1.0"
+    }
+}
+
+plugins {
+  id "java"
+}
+
+apply plugin: "net.cockamamy.gradle.javarepl"
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    testCompile 'junit:junit:4.12'
+}

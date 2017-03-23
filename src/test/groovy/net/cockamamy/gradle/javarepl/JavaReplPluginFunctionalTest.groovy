@@ -23,6 +23,8 @@ import static org.gradle.testkit.runner.TaskOutcome.*
 
 class JavaReplPluginFunctionalTest extends Specification {
 
+    static final TEST_VERSIONS = ["3.3", "3.4"]
+
     @Rule final TemporaryFolder myTestProjectDir = new TemporaryFolder();
     File myBuildFile
 
@@ -59,8 +61,111 @@ class JavaReplPluginFunctionalTest extends Specification {
             result.task(":javarepl").outcome == UP_TO_DATE
 
         where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
+    def "Run Java REPL with a single, valid, custom configuration"() {
+        given:
+            myBuildFile << """
+                    plugins {
+                        id 'net.cockamamy.gradle.javarepl'
+                    }
+                    
+                    repositories {
+                        jcenter()
+                    }
+                    
+                    ext {
+                        javarepl {
+                            timeout = 10
+                            configurations = ['compile']
+                        }
+                    }
+                """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .build()
+
+        then:
+            result.task(":javarepl").outcome == UP_TO_DATE
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
+    def "Run Java REPL with a multiple, valid custom configurations"() {
+        given:
+            myBuildFile << """
+                        plugins {
+                            id 'net.cockamamy.gradle.javarepl'
+                        }
+                        
+                        repositories {
+                            jcenter()
+                        }
+                        
+                        ext {
+                            javarepl {
+                                timeout = 10
+                                configurations = ['compile', 'testCompile']
+                            }
+                        }
+                    """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .build()
+
+        then:
+            result.task(":javarepl").outcome == UP_TO_DATE
+
+        where:
             gradleVersion << ["3.3", "3.4"]
 
     }
+
+    def "Run Java REPL with a single, invalid, custom configuration"() {
+        given:
+            myBuildFile << """
+                        plugins {
+                            id 'net.cockamamy.gradle.javarepl'
+                        }
+                        
+                        repositories {
+                            jcenter()
+                        }
+                        
+                        ext {
+                            javarepl {
+                                timeout = 10
+                                configurations = ['foo']
+                            }
+                        }
+                    """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .buildAndFail()
+
+        then:
+            result.output.contains("Configuration with name 'foo' not found.")
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
 
 }
