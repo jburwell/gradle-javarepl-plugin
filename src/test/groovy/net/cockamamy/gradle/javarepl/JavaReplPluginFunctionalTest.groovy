@@ -58,7 +58,9 @@ class JavaReplPluginFunctionalTest extends Specification {
                 .build()
 
         then:
-            result.task(":javarepl").outcome == UP_TO_DATE
+            result.task(":javarepl").outcome == SUCCESS
+            result.task(":testClasses").outcome == SUCCESS || result.task(":testClasses").outcome == UP_TO_DATE
+            result.tasks.findIndexOf { it.path == ":testClasses" } < result.tasks.findIndexOf { it.path == ":javarepl"}
 
         where:
             gradleVersion << TEST_VERSIONS
@@ -92,7 +94,9 @@ class JavaReplPluginFunctionalTest extends Specification {
                 .build()
 
         then:
-            result.task(":javarepl").outcome == UP_TO_DATE
+            result.task(":javarepl").outcome == SUCCESS
+            result.task(":testClasses").outcome == SUCCESS || result.task(":testClasses").outcome == UP_TO_DATE
+            result.tasks.findIndexOf { it.path == ":testClasses" } < result.tasks.findIndexOf { it.path == ":javarepl"}
 
         where:
             gradleVersion << TEST_VERSIONS
@@ -126,7 +130,9 @@ class JavaReplPluginFunctionalTest extends Specification {
                 .build()
 
         then:
-            result.task(":javarepl").outcome == UP_TO_DATE
+            result.task(":javarepl").outcome == SUCCESS
+            result.task(":testClasses").outcome == SUCCESS || result.task(":testClasses").outcome == UP_TO_DATE
+            result.tasks.findIndexOf { it.path == ":testClasses" } < result.tasks.findIndexOf { it.path == ":javarepl"}
 
         where:
             gradleVersion << TEST_VERSIONS
@@ -194,7 +200,9 @@ class JavaReplPluginFunctionalTest extends Specification {
                 .build()
 
         then:
-            result.task(":javarepl").outcome == UP_TO_DATE
+            result.task(":javarepl").outcome == SUCCESS
+            result.task(":testClasses").outcome == SUCCESS || result.task(":testClasses").outcome == UP_TO_DATE
+            result.tasks.findIndexOf { it.path == ":testClasses" } < result.tasks.findIndexOf { it.path == ":javarepl"}
 
         where:
             gradleVersion << TEST_VERSIONS
@@ -228,7 +236,9 @@ class JavaReplPluginFunctionalTest extends Specification {
                 .build()
 
         then:
-            result.task(":javarepl").outcome == UP_TO_DATE
+            result.task(":javarepl").outcome == SUCCESS
+            result.task(":testClasses").outcome == SUCCESS || result.task(":testClasses").outcome == UP_TO_DATE
+            result.tasks.findIndexOf { it.path == ":testClasses" } < result.tasks.findIndexOf { it.path == ":javarepl"}
 
         where:
             gradleVersion << TEST_VERSIONS
@@ -263,7 +273,181 @@ class JavaReplPluginFunctionalTest extends Specification {
                 .build()
 
         then:
-            result.task(":javarepl").outcome == UP_TO_DATE
+            result.task(":javarepl").outcome == SUCCESS
+            result.task(":testClasses").outcome == SUCCESS || result.task(":testClasses").outcome == UP_TO_DATE
+            result.tasks.findIndexOf { it.path == ":testClasses" } < result.tasks.findIndexOf { it.path == ":javarepl"}
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
+    def "Run Java REPL with a custom dependent task"() {
+        given:
+            myBuildFile << """
+                            plugins {
+                                id 'net.cockamamy.gradle.javarepl'
+                            }
+                            
+                            repositories {
+                                jcenter()
+                            }
+                            
+                            ext {
+                                javarepl {
+                                    timeout = 10
+                                    dependsOn = "classes"
+                                }
+                            }
+                        """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .build()
+
+        then:
+            result.task(":javarepl").outcome == SUCCESS
+            result.task(":classes").outcome == SUCCESS || result.task(":classes").outcome == UP_TO_DATE
+            result.tasks.findIndexOf { it.path == ":classes" } < result.tasks.findIndexOf { it.path == ":javarepl"}
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
+    def "Run Java REPL with an invalid custom dependent task"() {
+        given:
+            myBuildFile << """
+                            plugins {
+                                id 'net.cockamamy.gradle.javarepl'
+                            }
+                            
+                            repositories {
+                                jcenter()
+                            }
+                            
+                            ext {
+                                javarepl {
+                                    timeout = 10
+                                    dependsOn = "clazzes"
+                                }
+                            }
+                        """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .buildAndFail()
+
+        then:
+            result.output.contains("Task with path 'clazzes' not found")
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
+    def "Run Java REPL with a null custom dependent task"() {
+        given:
+            myBuildFile << """
+                            plugins {
+                                id 'net.cockamamy.gradle.javarepl'
+                            }
+                            
+                            repositories {
+                                jcenter()
+                            }
+                            
+                            ext {
+                                javarepl {
+                                    timeout = 10
+                                    dependsOn = null
+                                }
+                            }
+                        """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .buildAndFail()
+
+        then:
+            result.output.contains("The Java REPL plugin requires the specification of dependent task.")
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
+    def "Run Java REPL with a null JavaREPL version"() {
+        given:
+            myBuildFile << """
+                            plugins {
+                                id 'net.cockamamy.gradle.javarepl'
+                            }
+                            
+                            repositories {
+                                jcenter()
+                            }
+                            
+                            ext {
+                                javarepl {
+                                    timeout = 10
+                                    version = null
+                                }
+                            }
+                        """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .buildAndFail()
+
+        then:
+            result.output.contains("The Java REPL plugin requires the specification of a Java REPL version.")
+
+        where:
+            gradleVersion << TEST_VERSIONS
+
+    }
+
+    def "Run Java REPL with a blank JavaREPL version"() {
+        given:
+            myBuildFile << """
+                            plugins {
+                                id 'net.cockamamy.gradle.javarepl'
+                            }
+                            
+                            repositories {
+                                jcenter()
+                            }
+                            
+                            ext {
+                                javarepl {
+                                    timeout = 10
+                                    version = ""
+                                }
+                            }
+                        """
+
+        when:
+            final result = GradleRunner.create()
+                .withProjectDir(myTestProjectDir.root)
+                .withArguments("javarepl")
+                .withPluginClasspath()
+                .buildAndFail()
+
+        then:
+            result.output.contains("The Java REPL plugin requires the specification of a Java REPL version.")
 
         where:
             gradleVersion << TEST_VERSIONS

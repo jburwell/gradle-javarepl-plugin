@@ -42,52 +42,68 @@ class JavaReplPlugin implements Plugin<Project> {
             }
 
             final aConfiguration = project.configurations.maybeCreate("javarepl")
-
             project.dependencies {
                 javarepl "com.javarepl:javarepl:${project.javarepl.version}"
             }
 
-            project.task('javarepl', dependsOn: 'testClasses') {
+            project.javarepl.validate()
+
+            if (JavaVersion.current() != VERSION_1_8 && JavaVersion.current() != VERSION_1_9) {
+                throw new GradleException("The JavaREPL plugin must be run with Java 8 or above")
+            }
+
+            project.task("javarepl", dependsOn: "${project.javarepl.dependsOn}") {
 
                 description = "Runs Java REPL with the classpath defined in the ${project.javarepl.configurations} configurations"
 
-                if (JavaVersion.current() != VERSION_1_8 && JavaVersion.current() != VERSION_1_9) {
-                    throw new GradleException("The javarepl plugin must be run with Java 8 or above")
+                doLast {
+
+                    final aProcessBuilder = new ProcessBuilder(buildCommandFrom(project.javarepl))
+                        .redirectInput(INHERIT)
+                        .redirectOutput(INHERIT)
+                        .redirectError(INHERIT)
+
+                    // Collect the dependencies from all configurations to build the classpath string.  Accumulating the
+                    // pathes into a Set dedups the list in the event that a dependency is defined multiple times or repeats
+                    // due to configuration extension ...
+                    final aClasspath = project.javarepl.configurations
+                        .inject(new HashSet<String>(), { paths, name -> paths + project.configurations.getByName(name).asPath })
+                        .plus(aConfiguration.asPath)
+                        .join(File.pathSeparator)
+
+                    // Configure the classpath as an environment variable rather than a command line option
+                    // to allow for a longer classpath string than default shell command lines support ...
+                    project.logger.debug("Using classpath ${aClasspath} for JavaREPL")
+                    aProcessBuilder.environment().put("CLASSPATH", aClasspath)
+
+                    final aProcess = aProcessBuilder.start()
+                    final Integer aTimeout = project.javarepl.timeout
+                    aTimeout != null ? aProcess.waitFor(aTimeout, SECONDS) : aProcess.waitFor()
+                    aProcess.destroyForcibly()
+
                 }
-
-                final aHeapSize = project.javarepl.heapSize
-                final aHeapArgument = aHeapSize ? "-Xms${aHeapSize}m -Xmx${aHeapSize}m" : ""
-
-                final aStackSize = project.javarepl.stackSize
-                final aStackArgument= aStackSize ? "-Xss${aStackSize}m" : ""
-
-                final aProcessBuilder = new ProcessBuilder("java", aHeapArgument, aStackArgument, "javarepl.Main")
-                    .redirectInput(INHERIT)
-                    .redirectOutput(INHERIT)
-                    .redirectError(INHERIT)
-
-                // Collect the dependencies from all configurations to build the classpath string.  Accumulating the
-                // pathes into a Set dedups the list in the event that a dependency is defined multiple times or repeats
-                // due to configuration extension ...
-                final aClasspath = project.javarepl.configurations
-                    .inject(new HashSet<String>(), { paths, name -> paths + project.configurations.getByName(name).asPath })
-                    .plus(aConfiguration.asPath)
-                    .join(File.pathSeparator)
-
-                // Configure the classpath as an environment variable rather than a command line option
-                // to allow for a longer classpath string than default shell command lines support ...
-                project.logger.debug("Using classpath ${aClasspath} for JavaREPL")
-                aProcessBuilder.environment().put("CLASSPATH", aClasspath)
-
-                final aProcess = aProcessBuilder.start()
-
-                final Integer aTimeout = project.javarepl.timeout
-                aTimeout != null ? aProcess.waitFor(aTimeout, SECONDS) : aProcess.waitFor()
-                aProcess.destroyForcibly()
 
             }
 
         }
+
+    }
+
+    static List<String> buildCommandFrom(JavaReplPluginExtension theParameters) {
+
+        final aCommand = ["java"]
+
+        final aHeapSize = theParameters.heapSize
+        if (aHeapSize) {
+            aCommand + "-Xms${aHeapSize}m -Xmx${aHeapSize}m"
+        }
+
+        final aStackSize = theParameters.stackSize
+        if (aStackSize) {
+            aCommand + "-Xss${aStackSize}m"
+        }
+
+        aCommand + "javarepl.Main"
 
     }
 
