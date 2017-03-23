@@ -25,8 +25,10 @@ The plugin adds a ``javarepl`` extension namespace with the following options:
 |Extension Property|Description|Default Value|
 |------------------|-----------|-------------|
 |``configurations``|The list of Gradle configurations from which the classpath used to run Java REPL is derived|``["testRuntime"]``|
-|``version``|The version of Java REPL to install|428|
+|``heapSize``|The heap size used to run JavaREPL|``null``|
 |``timeout``|The length of time to run Java REPL before killing it.  This parameter is primarily use by unit tests. |``null``|
+|``stackSize``|The stack size used to run JavaREPL|``null``|
+|``version``|The version of Java REPL to install|428|
 
 # Running
 

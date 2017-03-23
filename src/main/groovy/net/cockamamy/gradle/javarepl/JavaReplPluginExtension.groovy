@@ -19,5 +19,7 @@ class JavaReplPluginExtension {
     List<String> configurations = ["testRuntime"]
     String version = "428"
     Integer timeout = null
+    Integer heapSize = null
+    Integer stackSize = null
 
 }
