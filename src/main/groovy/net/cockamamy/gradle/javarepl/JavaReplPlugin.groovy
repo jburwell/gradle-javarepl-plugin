@@ -76,6 +76,7 @@ class JavaReplPlugin implements Plugin<Project> {
                     project.logger.debug("Using classpath ${aClasspath} for JavaREPL")
                     aProcessBuilder.environment().put("CLASSPATH", aClasspath)
 
+                    println(System.lineSeparator())
                     final aProcess = aProcessBuilder.start()
                     final Integer aTimeout = project.javarepl.timeout
                     aTimeout != null ? aProcess.waitFor(aTimeout, SECONDS) : aProcess.waitFor()

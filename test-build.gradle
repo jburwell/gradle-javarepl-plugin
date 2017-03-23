@@ -3,7 +3,7 @@ buildscript {
         flatDir dirs: "build/libs"
     }
     dependencies {
-        classpath "net.cockamamy.gradle:gradle-javarepl-plugin:0.1.0"
+        classpath "net.cockamamy.gradle:gradle-javarepl-plugin:1.0.0"
     }
 }
 
