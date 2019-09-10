@@ -48,7 +48,7 @@ class JavaReplPlugin implements Plugin<Project> {
 
             project.javarepl.validate()
 
-            if (JavaVersion.current() != VERSION_1_8 && JavaVersion.current() != VERSION_1_9) {
+            if (JavaVersion.current() == VERSION_1_6 || JavaVersion.current() == VERSION_1_7) {
                 throw new GradleException("The JavaREPL plugin must be run with Java 8 or above")
             }
 
